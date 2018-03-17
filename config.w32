@@ -1,0 +1,17 @@
+// $Id$
+// vim:ft=javascript
+
+ARG_ENABLE("net_stream", "enable net_stream support", "no");
+
+if (PHP_NET_STREAM != "no") {
+  if ((PHP_ZLIB == "no" && CHECK_LIB("zlib_a.lib;zlib.lib", "net_stream", PHP_NET_STREAM)) ||
+      (PHP_ZLIB_SHARED && CHECK_LIB("zlib.lib", "net_stream", PHP_NET_STREAM)) ||
+      (PHP_ZLIB == "yes" && (!PHP_ZLIB_SHARED))
+    ) {
+    net_stream_sources = "net_stream.c";
+    EXTENSION("net_stream", net_stream_sources, PHP_NET_STREAM_SHARED, "/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
+  } else {
+    WARNING("net_stream not enabled; zlib not found");
+  }
+}
+
