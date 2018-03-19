@@ -73,7 +73,10 @@ const zend_function_entry net_stream_functions[] = {
   PHP_FE(net_stream_unpack, NULL)
   PHP_FE(net_stream_encode, NULL)
   PHP_FE(net_stream_decode, NULL)
+#ifdef PHP_FE_END
   PHP_FE_END
+#else
+  {NULL,NULL,NULL}
 };
 
 zend_module_entry net_stream_module_entry = {
