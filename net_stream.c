@@ -1063,13 +1063,13 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
       switch (ch)
       {
       case NET_STREAM_FORMAT_CHAR_ARRAY:
-        if (php_net_stream_set_array(pkt, option, 0))
+        if (php_net_stream_set_array(pkt, option, 0 TSRMLS_CC))
           return -1;
         format_count = 0;
         format_type = NET_STREAM_FORMAT_NONE;
         break;
       case NET_STREAM_FORMAT_CHAR_KEY_ARRAY:
-        if (php_net_stream_set_array(pkt, option, 1))
+        if (php_net_stream_set_array(pkt, option, 1 TSRMLS_CC))
           return -1;
         format_count = 0;
         format_type = NET_STREAM_FORMAT_NONE;
@@ -1364,7 +1364,7 @@ PHP_FUNCTION(net_stream_set)
     pkt.key_tail = pkt.key_head = pkt.data_key;
     pkt.key_end = pkt.data_key + pkt.key_len;
     pkt.format_index = 0;
-    if (php_net_stream_set_array(&pkt, option, (NULL == pkt.data_key ? 0 : 1)))
+    if (php_net_stream_set_array(&pkt, option, (NULL == pkt.data_key ? 0 : 1) TSRMLS_CC))
       RETURN_FALSE;
   }
   else
@@ -1577,7 +1577,7 @@ PHP_FUNCTION(net_stream_pack)
     switch (ch)
     {
     case NET_STREAM_FORMAT_CHAR_ARRAY:
-      if (php_net_stream_set_array(&pkt, option, 0))
+      if (php_net_stream_set_array(&pkt, option, 0 TSRMLS_CC))
       {
         efree(pkt.data);
         RETURN_NULL();
@@ -1586,7 +1586,7 @@ PHP_FUNCTION(net_stream_pack)
       format_type = NET_STREAM_FORMAT_NONE;
       break;
     case NET_STREAM_FORMAT_CHAR_KEY_ARRAY:
-      if (php_net_stream_set_array(&pkt, option, 1))
+      if (php_net_stream_set_array(&pkt, option, 1 TSRMLS_CC))
       {
         efree(pkt.data);
         RETURN_NULL();
