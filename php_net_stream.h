@@ -50,7 +50,7 @@ PHP_FUNCTION(net_stream_decode);
 
 #define NET_STREAM_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(net_stream, v)
 
-#if defined(ZTS) && defined(COMPILE_DL_NET_STREAM)
+#if defined(ZEND_ENGINE_3) && defined(ZTS) && defined(COMPILE_DL_NET_STREAM)
 ZEND_TSRMLS_CACHE_EXTERN();
 #endif
 

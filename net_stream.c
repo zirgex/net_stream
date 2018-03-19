@@ -94,7 +94,7 @@ zend_module_entry net_stream_module_entry = {
 };
 
 #ifdef COMPILE_DL_NET_STREAM
-#ifdef ZTS
+#if defined(ZEND_ENGINE_3) && defined(ZTS)
 ZEND_TSRMLS_CACHE_DEFINE();
 #endif
 ZEND_GET_MODULE(net_stream)
@@ -243,12 +243,22 @@ void php_net_stream_extract(INTERNAL_FUNCTION_PARAMETERS, int8_t mode)
 
 static void php_net_stream_set_int8(char* buf, size_t buf_len, size_t* index, zval* option)
 {
+#ifdef ZEND_ENGINE_2
+  zval tmp = *option;
+#endif
   if (buf_len < *index + sizeof(int8_t))
   {
     *index = buf_len;
     return;
   }
+#if defined(ZEND_ENGINE_3)
   *(buf + (*index)++) = (int8_t)zval_get_long(option);
+#elif defined(ZEND_ENGINE_2)
+  zval_copy_ctor(&tmp);
+  convert_to_long(&tmp);
+  *(buf + (*index)++) = (int8_t)Z_LVAL(tmp);
+  zval_dtor(&tmp);
+#endif
 }
 
 static void php_net_stream_get_int8(zval* z_value, size_t* index, const char* data, size_t data_len, const char* name, size_t name_len)
@@ -904,13 +914,13 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
 #if defined(ZEND_ENGINE_3)
       if ((option = zend_hash_index_find(arr, i)) == NULL)
       {
-        zend_error(E_WARNING, NET_STREAM_LOG_4, i);
+        zend_error(E_WARNING, NET_STREAM_LOG_4, (uint32_t)i);
         return -1;
       }
 #elif defined(ZEND_ENGINE_2)
       if (zend_hash_index_find(arr, i, (void**)&tmpzval) != SUCCESS)
       {
-        zend_error(E_WARNING, NET_STREAM_LOG_4, i);
+        zend_error(E_WARNING, NET_STREAM_LOG_4, (uint32_t)i);
         return -1;
       }
       option = *tmpzval;
@@ -947,13 +957,13 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
 #if defined(ZEND_ENGINE_3)
       if ((option = zend_hash_index_find(arr, i)) == NULL)
       {
-        zend_error(E_WARNING, NET_STREAM_LOG_4, i);
+        zend_error(E_WARNING, NET_STREAM_LOG_4, (uint32_t)i);
         return -1;
       }
 #elif defined(ZEND_ENGINE_2)
       if (zend_hash_index_find(arr, i, (void**)&tmpzval) != SUCCESS)
       {
-        zend_error(E_WARNING, NET_STREAM_LOG_4, i);
+        zend_error(E_WARNING, NET_STREAM_LOG_4, (uint32_t)i);
         return -1;
       }
       option = *tmpzval;
@@ -1016,13 +1026,13 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
 #if defined(ZEND_ENGINE_3)
         if ((option = zend_hash_index_find(tuple, j)) == NULL)
         {
-          zend_error(E_WARNING, NET_STREAM_LOG_4, j);
+          zend_error(E_WARNING, NET_STREAM_LOG_4, (uint32_t)j);
           return -1;
         }
 #elif defined(ZEND_ENGINE_2)
         if (zend_hash_index_find(tuple, j, (void**)&tmpzval) != SUCCESS)
         {
-          zend_error(E_WARNING, NET_STREAM_LOG_4, j);
+          zend_error(E_WARNING, NET_STREAM_LOG_4, (uint32_t)j);
           return -1;
         }
         option = *tmpzval;
