@@ -848,7 +848,7 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
 #ifdef ZEND_ENGINE_2
   zval** tmpzval = NULL;
 #endif
-  HashTable *tuple, *ht = HASH_OF(parameter);
+  HashTable *tuple, *arr = HASH_OF(parameter);
   char ch, *name, *ptr = pkt->data + pkt->index;
   size_t i, j, num, size, name_len, format_start, format_count = 0, format_type = NET_STREAM_FORMAT_NONE;
   int8_t is_0k = 0;
@@ -864,7 +864,7 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
   }
   else
   {
-    num = ht->nNumOfElements;
+    num = arr->nNumOfElements;
     if (0x7f < num)
     {
       if (pkt->data_len < pkt->index + sizeof(int16_t))
@@ -898,13 +898,13 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
     for (i = 0; i < num; ++i)
     {
 #if defined(ZEND_ENGINE_3)
-      if ((option = zend_hash_index_find(ht, i)) == NULL)
+      if ((option = zend_hash_index_find(arr, i)) == NULL)
       {
         zend_error(E_WARNING, NET_STREAM_LOG_4, i);
         return -1;
       }
 #elif defined(ZEND_ENGINE_2)
-      if (zend_hash_index_find(ht, i, (void**)&tmpzval) != SUCCESS)
+      if (zend_hash_index_find(arr, i, (void**)&tmpzval) != SUCCESS)
       {
         zend_error(E_WARNING, NET_STREAM_LOG_4, i);
         return -1;
@@ -936,18 +936,18 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
   {
     if (is_0k)
     {
-      tuple = ht;
+      tuple = arr;
     }
     else
     {
 #if defined(ZEND_ENGINE_3)
-      if ((option = zend_hash_index_find(ht, i)) == NULL)
+      if ((option = zend_hash_index_find(arr, i)) == NULL)
       {
         zend_error(E_WARNING, NET_STREAM_LOG_4, i);
         return -1;
       }
 #elif defined(ZEND_ENGINE_2)
-      if (zend_hash_index_find(ht, i, (void**)&tmpzval) != SUCCESS)
+      if (zend_hash_index_find(arr, i, (void**)&tmpzval) != SUCCESS)
       {
         zend_error(E_WARNING, NET_STREAM_LOG_4, i);
         return -1;
@@ -1474,7 +1474,7 @@ PHP_FUNCTION(net_stream_pack)
 #ifdef ZEND_ENGINE_2
   zval** tmpzval = NULL;
 #endif
-  HashTable* ht;
+  HashTable* arr;
   char ch, *name;
   size_t name_len, format_count, format_type;
   net_stream_packet_t pkt;
@@ -1503,7 +1503,7 @@ PHP_FUNCTION(net_stream_pack)
     RETURN_NULL();
 
   pkt.data = (char*)emalloc(pkt.data_len);
-  ht = HASH_OF(parameter);
+  arr = HASH_OF(parameter);
   pkt.key_tail = pkt.key_head = pkt.data_key;
   pkt.key_end = pkt.data_key + pkt.key_len;
   pkt.format_index = format_count = 0;
@@ -1525,14 +1525,14 @@ PHP_FUNCTION(net_stream_pack)
       RETURN_NULL();
     }
 #if defined(ZEND_ENGINE_3)
-    if ((option = zend_hash_str_find(ht, name, name_len)) == NULL)
+    if ((option = zend_hash_str_find(arr, name, name_len)) == NULL)
     {
       php_net_stream_invalid_key_name(name, name_len);
       efree(pkt.data);
       RETURN_NULL();
     }
 #elif defined(ZEND_ENGINE_2)
-    if (zend_hash_find(ht, name, name_len, (void**)&tmpzval) != SUCCESS)
+    if (zend_hash_find(arr, name, name_len, (void**)&tmpzval) != SUCCESS)
     {
       php_net_stream_invalid_key_name(name, name_len);
       efree(pkt.data);
