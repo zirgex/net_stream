@@ -168,9 +168,6 @@ void php_net_stream_extract(INTERNAL_FUNCTION_PARAMETERS, int8_t mode)
   zend_bool flag = 0;
 
   if (2 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
-#ifdef ZEND_ENGINE_2
-  TSRMLS_FETCH();
-#endif
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sa!|bl", &raw, &raw_len, &obfuscator, &flag, &outbuf_size) == FAILURE)
     RETURN_NULL();
 
@@ -1328,9 +1325,6 @@ PHP_FUNCTION(net_stream_get)
   pkt.format_len = pkt.key_len = 0;
 
   if (3 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
-#ifdef ZEND_ENGINE_2
-  TSRMLS_FETCH();
-#endif
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sll|ss", &pkt.data, &pkt.data_len, &format_type, &pkt.index, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len) == FAILURE)
     RETURN_NULL();
   if (!pkt.data_len || pkt.index >= pkt.data_len || NET_STREAM_FORMAT_NONE >= format_type || NET_STREAM_FORMAT_MAX_TAG <= format_type)
@@ -1360,9 +1354,6 @@ PHP_FUNCTION(net_stream_set)
   pkt.format_len = pkt.key_len = 0;
 
   if (3 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
-#ifdef ZEND_ENGINE_2
-  TSRMLS_FETCH();
-#endif
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zsll|ss", &option, &pkt.data, &pkt.data_len, &format_type, &pkt.index, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len) == FAILURE)
     RETURN_FALSE;
   if (!pkt.data_len || pkt.index >= pkt.data_len || NET_STREAM_FORMAT_NONE >= format_type || NET_STREAM_FORMAT_MAX_TAG <= format_type)
@@ -1391,9 +1382,6 @@ PHP_FUNCTION(net_stream_unpack)
   pkt.index = 0;
 
   if (3 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
-#ifdef ZEND_ENGINE_2
-  TSRMLS_FETCH();
-#endif
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sss|l", &pkt.data, &pkt.data_len, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len, &pkt.index) == FAILURE)
     RETURN_NULL();
   if (!pkt.data_len || !pkt.key_len || !pkt.format_len || pkt.index >= pkt.data_len)
@@ -1494,9 +1482,6 @@ PHP_FUNCTION(net_stream_pack)
   pkt.index = 0;
 
   if (3 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
-#ifdef ZEND_ENGINE_2
-  TSRMLS_FETCH();
-#endif
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z!s!s!|ll", &parameter, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len, &pkt.index, &pkt.data_len) == FAILURE)
     RETURN_NULL();
   if (!pkt.data_len || pkt.index > pkt.data_len)
