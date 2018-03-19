@@ -9,3 +9,7 @@ php:
   - 5.3
   - 5.2
 env: CC=clang
+before_script:
+  - ./travis/compile.sh
+script:
+  - exit 0
