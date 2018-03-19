@@ -7,7 +7,9 @@ php:
   - 5.5
   - 5.4
   - 5.3
+    dist: precise
   - 5.2
+    dist: precise
 env: CC=clang
 before_script:
   - ./travis/compile.sh

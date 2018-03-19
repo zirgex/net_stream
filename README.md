@@ -15,6 +15,6 @@ Add the following lines to your php.ini:
   
 Dependencies  
 ------------  
-* Supports PHP 7.0 – 7.2.  
-* Requires ZLIB.  
+* Supports PHP 5.2 - 5.6, 7.0 – 7.2  
+* Requires ZLIB  
   
