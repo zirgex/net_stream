@@ -4,9 +4,6 @@
 #define PHP_NET_STREAM_VERSION "0.0.8"
 #define PHP_NET_STREAM_RELEASE_DATE "2018-03-15"
 
-// 压缩&解压临时用的默认分配字节 
-#define NET_STREAM_OUTBUF_SIZE  0x200
-
 enum
 {
   NET_STREAM_FORMAT_NONE = 0,
@@ -36,6 +33,9 @@ enum
 #define NET_STREAM_FORMAT_CHAR_STRING     's'
 #define NET_STREAM_FORMAT_CHAR_ARRAY      'a'
 #define NET_STREAM_FORMAT_CHAR_KEY_ARRAY  'k'
+
+// pre-allocated memory, used to compress or uncompress
+#define NET_STREAM_OUTBUF_SIZE  0x200
 
 #define NET_STREAM_COMPRESSED   1
 
