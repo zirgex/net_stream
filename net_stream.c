@@ -143,7 +143,7 @@ char* php_net_stream_zcodec(size_t* data_len, char* inbuf, size_t inbuf_len, cha
       z.avail_out = outbuf_size;
     }
   }
-  if (count = outbuf_size - z.avail_out)
+  if ((count = outbuf_size - z.avail_out))
   {
     data = (char*)erealloc(data, total_count + outbuf_size);
     memcpy(data + total_count, outbuf, count);
@@ -178,7 +178,7 @@ void php_net_stream_extract(INTERNAL_FUNCTION_PARAMETERS, int8_t mode)
   if (obfuscator)
   {
     arr = Z_ARRVAL_P(obfuscator);
-    key = (int8_t*)emalloc(sizeof(int8_t)*zend_hash_num_elements(arr));
+    key = (char*)emalloc(sizeof(char)*zend_hash_num_elements(arr));
 #if defined(ZEND_ENGINE_3)
     ZEND_HASH_FOREACH_VAL(arr, entry) {
       if (Z_TYPE_P(entry) == IS_LONG)
