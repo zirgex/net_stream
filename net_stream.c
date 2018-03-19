@@ -842,7 +842,7 @@ static void php_net_stream_invalid_key_name(const char* name, size_t name_len)
   efree(str);
 }
 
-static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter, int8_t is_key_array)
+static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter, int8_t is_key_array TSRMLS_DC)
 {
   zval* option;
 #ifdef ZEND_ENGINE_2
