@@ -1,5 +1,4 @@
 <?php
-
 $key = 'i0/i1/i2/j0/j1/j2/c0/c1/c2';
 $type = 'i2uq3c2n';
 $raw_data = array(
@@ -13,15 +12,20 @@ $obfuscator = array(36, 19, 80, 12, 37, 90, 26, 51);
 $encode_data = net_stream_encode($pack_data, $obfuscator);
 $decode_data = net_stream_decode($encode_data, $obfuscator);
 $unpack_data = net_stream_unpack($decode_data, $type, $key);
-echo var_export($unpack_data, true), "\n";
+echo "obfuscator:\n", var_export($unpack_data, true), "\n";
 
 $encode_data = net_stream_encode($pack_data, $obfuscator, NET_STREAM_COMPRESSED);
 $decode_data = net_stream_decode($encode_data, $obfuscator, NET_STREAM_COMPRESSED);
 $unpack_data = net_stream_unpack($decode_data, $type, $key);
-echo var_export($unpack_data, true), "\n";
+echo "obfuscator, compressed:\n", var_export($unpack_data, true), "\n";
+
+$encode_data = net_stream_encode($pack_data, null, NET_STREAM_COMPRESSED);
+$decode_data = net_stream_decode($encode_data, null, NET_STREAM_COMPRESSED);
+$unpack_data = net_stream_unpack($decode_data, $type, $key);
+echo "compressed:\n", var_export($unpack_data, true), "\n";
 
 $encode_data = net_stream_encode($pack_data, $obfuscator, 0, NET_STREAM_OUTBUF_SIZE);
 $decode_data = net_stream_decode($encode_data, $obfuscator, 0, NET_STREAM_OUTBUF_SIZE);
 $unpack_data = net_stream_unpack($decode_data, $type, $key);
-echo var_export($unpack_data, true), "\n";
+echo "obfuscator, customize outbuf size:\n", var_export($unpack_data, true), "\n";
 
