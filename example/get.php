@@ -35,7 +35,7 @@ $cursor = net_stream_set($arr, $pack_data, NET_STREAM_ARRAY, $cursor, $type, $ke
 $cursor = net_stream_set('ok', $pack_data, NET_STREAM_STRING, $cursor);
 if (false !== $cursor)
   echo 'length=', $cursor, "\n";
-echo 'Example #', ($index+1), ', \'', $type, '\', \'', $key, '\'', "\n";
+echo 'Example #', ($index+1), ': \'', $type, '\', \'', $key, '\'', "\n";
 
 $v = net_stream_get($pack_data, NET_STREAM_UINT_16, 0);
 echo 'value=', $v[NET_STREAM_VALUE], "\n";
