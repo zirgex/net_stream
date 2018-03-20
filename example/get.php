@@ -1,5 +1,5 @@
 <?php
-
+// allocated memory is zero-filled
 $pack_data = net_stream_pack(null, null, null, 48, 48);
 
 $value = 1001;
