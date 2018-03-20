@@ -907,8 +907,6 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
 
   if ('0' == ch)
   {
-    if (!is_key_array)
-      return -1;
     is_0k = 1;
     num = 1;
   }
@@ -1165,15 +1163,6 @@ static void php_net_stream_get_array(zval* z_root, net_stream_packet_t* pkt, con
 
   if ('0' == ch)
   {
-    if (!is_key_array)
-    {
-      if (NULL == arr_name)
-        add_next_index_null(z_root);
-      else
-        add_assoc_null_ex(z_root, arr_name, arr_name_len);
-      pkt->index = pkt->data_len;
-      return;
-    }
     is_0k = 1;
     num = 1;
   }
@@ -1375,7 +1364,7 @@ PHP_FUNCTION(net_stream_get)
   pkt.format_len = pkt.key_len = 0;
 
   if (3 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sll|ss", &pkt.data, &pkt.data_len, &format_type, &pkt.index, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len) == FAILURE)
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sll|ss!", &pkt.data, &pkt.data_len, &format_type, &pkt.index, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len) == FAILURE)
     RETURN_NULL();
   if (!pkt.data_len || pkt.index >= pkt.data_len || NET_STREAM_FORMAT_NONE >= format_type || NET_STREAM_FORMAT_MAX_TAG <= format_type)
     RETURN_NULL();
@@ -1404,7 +1393,7 @@ PHP_FUNCTION(net_stream_set)
   pkt.format_len = pkt.key_len = 0;
 
   if (3 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zsll|ss", &option, &pkt.data, &pkt.data_len, &format_type, &pkt.index, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len) == FAILURE)
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zsll|ss!", &option, &pkt.data, &pkt.data_len, &format_type, &pkt.index, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len) == FAILURE)
     RETURN_FALSE;
   if (!pkt.data_len || pkt.index >= pkt.data_len || NET_STREAM_FORMAT_NONE >= format_type || NET_STREAM_FORMAT_MAX_TAG <= format_type)
     RETURN_FALSE;

@@ -34,7 +34,7 @@ $data[4] = array('ik2s2s', 'd/k/x/y/z',
 $length = count($data);
 $index = isset($_SERVER['argv'][1]) ? (int)$_SERVER['argv'][1] - 1 : -1;
 if (0 > $index || $index >= $length)
-  die("Enter: php example.php [1-5]\n");
+  die('Enter: php example.php [1-' . $length . "]\n");
 
 $type =& $data[$index][0];
 $key =& $data[$index][1];

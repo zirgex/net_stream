@@ -55,7 +55,7 @@ $map = array(1, 2, 3);
 $index = isset($_SERVER['argv'][1]) ? (int)$_SERVER['argv'][1] : 0;
 $length = count($map);
 if (1 > $index || $index > $length)
-  die("Enter: php example.php [1-3]\n");
+  die('Enter: php example.php [1-' . $length . "]\n");
 echo 'Example #', $index, "\n";
 $fn = 'example_' . $map[$index-1];
 $fn();
