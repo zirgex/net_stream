@@ -15,7 +15,6 @@
 */
 
 $data = array();
-
 $data[0] = array('iacs', 'id/arr/msg',
   array('id' => 12, 'arr' => array(1, 3, 2), 'msg' => 'ok'));
 
@@ -31,6 +30,8 @@ $data[3] = array('rk03c3s', 'id/arr/a/b/c/msg',
 $data[4] = array('ik2s2s', 'd/k/x/y/z',
   array('d' => 7, 'k' => array(array('x' => 'a1', 'y' => 'a2'), array('y' => 'b1', 'x' => 'b2'), array('x' => 'c1', 'y' => 'c2')), 'z' => 'ok'));
 
+$data[5] = array('ai', 'arr', array('arr' => array(123, 1, 3, 2)));
+
 $length = count($data);
 $index = isset($_SERVER['argv'][1]) ? (int)$_SERVER['argv'][1] - 1 : -1;
 if (0 > $index || $index >= $length)
@@ -43,7 +44,7 @@ $raw_data =& $data[$index][2];
 $pack_data = net_stream_pack($raw_data, $type, $key);
 $unpack_data = net_stream_unpack($pack_data, $type, $key);
 
-echo 'Example #', ($index+1), "\n";
+echo 'Example #', ($index+1), ': \'', $type, '\', \'', $key, '\'', "\n";
 echo var_export($raw_data, true), "\n";
 echo var_export($unpack_data, true), "\n";
 
