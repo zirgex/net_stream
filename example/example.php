@@ -15,8 +15,7 @@
 */
 
 $data = array();
-$data[0] = array('iacs', 'id/arr/msg',
-  array('id' => 12, 'arr' => array(1, 3, 2), 'msg' => 'ok'));
+$data[0] = array('iacs', 'id/arr/msg', array('id' => 12, 'arr' => array(1, 3, 2), 'msg' => 'ok'));
 
 $data[1] = array('ia1ss', 'id/arr/msg',
   array('id' => 123, 'arr' => array(array('a'), array('b'), array('c')), 'msg' => 'ok'));
@@ -31,12 +30,13 @@ $data[4] = array('ik2s2s', 'd/k/x/y/z',
   array('d' => 7, 'k' => array(array('x' => 'a1', 'y' => 'a2'), array('y' => 'b1', 'x' => 'b2'), array('x' => 'c1', 'y' => 'c2')), 'z' => 'ok'));
 
 $data[5] = array('ai', 'arr', array('arr' => array(123, 1, 3, 2)));
+$data[6] = array('i', null, array(123, 1, 3, 2));
+$data[7] = array('06si2s2i', null, array('a', 1, 2, 'b', 'c', 3));
 
 $length = count($data);
 $index = isset($_SERVER['argv'][1]) ? (int)$_SERVER['argv'][1] - 1 : -1;
 if (0 > $index || $index >= $length)
   die('Enter: php example.php [1-' . $length . "]\n");
-
 $type =& $data[$index][0];
 $key =& $data[$index][1];
 $raw_data =& $data[$index][2];

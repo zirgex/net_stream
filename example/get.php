@@ -21,17 +21,17 @@ $list[4] = array('3si2', 'x/y/z',
   array(array('x' => 'a', 'y' => 1000, 'z' => 1), array('x' => 'b', 'y' => 2000, 'z' => 2)));
 
 $list[5] = array('06si2si2', null, array('a', 1000, 1, 'b', 2000, 2));
+$list[6] = array('i', null, array(1000, 1, 2000, 2));
 
 $length = count($list);
 $index = isset($_SERVER['argv'][1]) ? (int)$_SERVER['argv'][1] - 1 : -1;
 if (0 > $index || $index >= $length)
   die('Enter: php get.php [1-' . $length . "]\n");
-
 $type =& $list[$index][0];
 $key =& $list[$index][1];
 $arr =& $list[$index][2];
-$cursor = net_stream_set($arr, $pack_data, NET_STREAM_ARRAY, $cursor, $type, $key);
 
+$cursor = net_stream_set($arr, $pack_data, NET_STREAM_ARRAY, $cursor, $type, $key);
 $cursor = net_stream_set('ok', $pack_data, NET_STREAM_STRING, $cursor);
 if (false !== $cursor)
   echo 'length=', $cursor, "\n";
