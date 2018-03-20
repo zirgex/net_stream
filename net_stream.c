@@ -652,7 +652,25 @@ static void php_net_stream_set_string(char* buf, size_t buf_len, size_t* index, 
   convert_to_string(&tmp);
   size = Z_STRLEN(tmp);
 #endif
-  if (0x7f < size)
+  if (0x3fff < size)
+  {
+    if (buf_len < *index + sizeof(int32_t) + size)
+    {
+      *index = buf_len;
+#if defined(ZEND_ENGINE_3)
+      zend_string_release(str);
+#elif defined(ZEND_ENGINE_2)
+      zval_dtor(&tmp);
+#endif
+      return;
+    }
+    *ptr++ = (int8_t)(((size >> 0x18) & 0x3f) | 0xc0);
+    *ptr++ = (int8_t)((size >> 0x10) & 0xff);
+    *ptr++ = (int8_t)((size >> 8) & 0xff);
+    *ptr = (int8_t)(size & 0xff);
+    *index += sizeof(int32_t);
+  }
+  else if (0x7f < size)
   {
     if (buf_len < *index + sizeof(int16_t) + size)
     {
@@ -664,7 +682,7 @@ static void php_net_stream_set_string(char* buf, size_t buf_len, size_t* index, 
 #endif
       return;
     }
-    *ptr++ = (int8_t)(((size >> 8) & 0x7f) | 0x80);
+    *ptr++ = (int8_t)(((size >> 8) & 0x3f) | 0x80);
     *ptr = (int8_t)(size & 0xff);
     *index += sizeof(int16_t);
   }
@@ -680,7 +698,7 @@ static void php_net_stream_set_string(char* buf, size_t buf_len, size_t* index, 
 #endif
       return;
     }
-    *ptr = (uint8_t)size;
+    *ptr = (int8_t)size;
     ++(*index);
   }
 #if defined(ZEND_ENGINE_3)
@@ -708,16 +726,34 @@ static void php_net_stream_get_string(zval* z_value, size_t* index, const char* 
   size = *((uint8_t*)(data + (*index)++));
   if (0x7f < size)
   {
-    if (*index + sizeof(int8_t) > data_len)
+    if (0xbf < size)
     {
-      if (NULL == name)
-        add_next_index_null(z_value);
-      else
-        add_assoc_null_ex(z_value, name, name_len);
-      *index = data_len;
-      return;
+      if (*index + sizeof(int8_t) + sizeof(int16_t) > data_len)
+      {
+        if (NULL == name)
+          add_next_index_null(z_value);
+        else
+          add_assoc_null_ex(z_value, name, name_len);
+        *index = data_len;
+        return;
+      }
+      size = (size & 0x3f) << 0x18;
+      size += ((uint32_t)(*((uint8_t*)(data + (*index)++))) & 0xff) << 0x10;
+      size += ((uint16_t)(*((uint8_t*)(data + (*index)++))) & 0xff) << 8;
     }
-    size = (size & 0x7f) << 8;
+    else
+    {
+      if (*index + sizeof(int8_t) > data_len)
+      {
+        if (NULL == name)
+          add_next_index_null(z_value);
+        else
+          add_assoc_null_ex(z_value, name, name_len);
+        *index = data_len;
+        return;
+      }
+      size = (size & 0x3f) << 8;
+    }
     size += *((uint8_t*)(data + (*index)++));
   }
   if (!size || *index + size > data_len)
