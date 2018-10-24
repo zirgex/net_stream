@@ -1,9 +1,10 @@
 <?php
 // allocated memory is zero-filled
-$pack_data = net_stream_pack(null, null, null, 48, 48);
+//$pack_data = net_stream_pack(null, null, null, 48, 48);
+$pack_data = net_stream_alloc(48);
 
 $value = 1001;
-$cursor = net_stream_set($value, $pack_data, NET_STREAM_UINT_16, 0);
+$cursor = net_stream_put($value, $pack_data, NET_STREAM_UINT_16, 0);
 
 $list = array();
 $list[0] = array('02s2', 'name/passwd',
@@ -31,20 +32,37 @@ $type =& $list[$index][0];
 $key =& $list[$index][1];
 $arr =& $list[$index][2];
 
-$cursor = net_stream_set($arr, $pack_data, NET_STREAM_ARRAY, $cursor, $type, $key);
-$cursor = net_stream_set('ok', $pack_data, NET_STREAM_STRING, $cursor);
+$cursor = net_stream_put($arr, $pack_data, NET_STREAM_ARRAY, $cursor, 0, $type, $key);
+$cursor = net_stream_put('ok!', $pack_data, NET_STREAM_STRING, $cursor);
+$cursor = net_stream_put(5, $pack_data, NET_STREAM_UINT_8, $cursor);
+$cursor = net_stream_put('done!', $pack_data, NET_STREAM_BYTE, $cursor, 5);
 if (false !== $cursor)
   echo 'length=', $cursor, "\n";
 echo 'Example #', ($index+1), ': \'', $type, '\', \'', $key, '\'', "\n";
 
-$v = net_stream_get($pack_data, NET_STREAM_UINT_16, 0);
+$data = net_stream_trim($pack_data, $cursor);
+
+$v = net_stream_get($data, NET_STREAM_UINT_16, 0);
 echo 'value=', $v[NET_STREAM_VALUE], "\n";
 
-$v = net_stream_get($pack_data, NET_STREAM_ARRAY, $v[NET_STREAM_CURSOR], $type, $key);
+$v = net_stream_get($data, NET_STREAM_ARRAY, $v[NET_STREAM_CURSOR], 0, $type, $key);
 if (is_null($v)) die("NULL\n");
 echo var_export($v, true), "\n";
 
-$v = net_stream_get($pack_data, NET_STREAM_STRING, $v[NET_STREAM_CURSOR]);
+$v = net_stream_get($data, NET_STREAM_STRING, $v[NET_STREAM_CURSOR]);
+if (is_null($v)) die("NULL\n");
+echo var_export($v, true), "\n";
+
+$v = net_stream_get($data, NET_STREAM_UINT_8, $v[NET_STREAM_CURSOR]);
+if (is_null($v)) die("NULL\n");
+echo var_export($v, true), "\n";
+
+$cursor = $v[NET_STREAM_CURSOR];
+$v = net_stream_get($data, NET_STREAM_BYTE, $cursor, $v[NET_STREAM_VALUE]);
+if (is_null($v)) die("NULL\n");
+echo var_export($v, true), "\n";
+
+$v = net_stream_get($data, NET_STREAM_BYTE, $cursor);
 if (is_null($v)) die("NULL\n");
 echo var_export($v, true), "\n";
 

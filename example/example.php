@@ -12,6 +12,7 @@
   NET_STREAM_STRING       's'
   NET_STREAM_ARRAY        'a'
   NET_STREAM_KEY_ARRAY    'k'
+  NET_STREAM_BYTE
 */
 
 $data = array();

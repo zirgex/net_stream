@@ -44,7 +44,7 @@ function example_3() {
   $pack_data = net_stream_pack($raw_data, 'qs', 'money/msg', 2, 16);
   echo var_export($raw_data, true), "\n\n";
 
-  $cursor = net_stream_set($raw_data['id'], $pack_data, NET_STREAM_UINT_16, 0);
+  $cursor = net_stream_put($raw_data['id'], $pack_data, NET_STREAM_UINT_16, 0);
   if (false === $cursor)
     die("example_3 ERROE\n");
   $unpack_data = net_stream_unpack($pack_data, 'mqs', 'id/money/msg');

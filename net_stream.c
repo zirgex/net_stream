@@ -58,6 +58,7 @@ PHP_MINIT_FUNCTION(net_stream)
   REGISTER_LONG_CONSTANT("NET_STREAM_DOUBLE", NET_STREAM_FORMAT_DOUBLE, CONST_CS | CONST_PERSISTENT);
   REGISTER_LONG_CONSTANT("NET_STREAM_STRING", NET_STREAM_FORMAT_STRING, CONST_CS | CONST_PERSISTENT);
   REGISTER_LONG_CONSTANT("NET_STREAM_ARRAY", NET_STREAM_FORMAT_ARRAY, CONST_CS | CONST_PERSISTENT);
+  REGISTER_LONG_CONSTANT("NET_STREAM_BYTE", NET_STREAM_FORMAT_BYTE, CONST_CS | CONST_PERSISTENT);
   return SUCCESS;
 }
 
@@ -68,11 +69,13 @@ PHP_MSHUTDOWN_FUNCTION(net_stream)
 
 const zend_function_entry net_stream_functions[] = {
   PHP_FE(net_stream_get, NULL)
-  PHP_FE(net_stream_set, NULL)
+  PHP_FE(net_stream_put, NULL)
   PHP_FE(net_stream_pack, NULL)
   PHP_FE(net_stream_unpack, NULL)
   PHP_FE(net_stream_encode, NULL)
   PHP_FE(net_stream_decode, NULL)
+  PHP_FE(net_stream_alloc, NULL)
+  PHP_FE(net_stream_trim, NULL)
 #ifdef PHP_FE_END
   PHP_FE_END
 #else
@@ -241,7 +244,7 @@ void php_net_stream_extract(INTERNAL_FUNCTION_PARAMETERS, int8_t mode)
   efree(data);
 }
 
-static void php_net_stream_set_int8(char* buf, size_t buf_len, size_t* index, zval* option)
+static void php_net_stream_put_int8(char* buf, size_t buf_len, size_t* index, zval* option)
 {
 #ifdef ZEND_ENGINE_2
   zval tmp = *option;
@@ -299,7 +302,7 @@ static void php_net_stream_get_uint8(zval* z_value, size_t* index, const char* d
     add_assoc_long_ex(z_value, name, name_len, value);
 }
 
-static void php_net_stream_set_int16(char* buf, size_t buf_len, size_t* index, zval* option)
+static void php_net_stream_put_int16(char* buf, size_t buf_len, size_t* index, zval* option)
 {
   int16_t value;
   char* ptr = buf + *index;
@@ -366,7 +369,7 @@ static void php_net_stream_get_uint16(zval* z_value, size_t* index, const char* 
     add_assoc_long_ex(z_value, name, name_len, value);
 }
 
-static void php_net_stream_set_int32(char* buf, size_t buf_len, size_t* index, zval* option)
+static void php_net_stream_put_int32(char* buf, size_t buf_len, size_t* index, zval* option)
 {
   int32_t value;
   char* ptr = buf + *index;
@@ -445,7 +448,7 @@ static void php_net_stream_get_uint32(zval* z_value, size_t* index, const char* 
     add_assoc_long_ex(z_value, name, name_len, value);
 }
 
-static void php_net_stream_set_int64(char* buf, size_t buf_len, size_t* index, zval* option)
+static void php_net_stream_put_int64(char* buf, size_t buf_len, size_t* index, zval* option)
 {
   int64_t value;
   char* ptr = buf + *index;
@@ -525,7 +528,7 @@ static void php_net_stream_get_int64(zval* z_value, size_t* index, const char* d
 #endif
 }
 
-static void php_net_stream_set_float(char* buf, size_t buf_len, size_t* index, zval* option)
+static void php_net_stream_put_float(char* buf, size_t buf_len, size_t* index, zval* option)
 {
   union {
     float f;
@@ -579,7 +582,7 @@ static void php_net_stream_get_float(zval* z_value, size_t* index, const char* d
     add_assoc_double_ex(z_value, name, name_len, d.f);
 }
 
-static void php_net_stream_set_double(char* buf, size_t buf_len, size_t* index, zval* option)
+static void php_net_stream_put_double(char* buf, size_t buf_len, size_t* index, zval* option)
 {
   union {
     double f;
@@ -638,7 +641,7 @@ static void php_net_stream_get_double(zval* z_value, size_t* index, const char* 
     add_assoc_double_ex(z_value, name, name_len, d.f);
 }
 
-static void php_net_stream_set_string(char* buf, size_t buf_len, size_t* index, zval* option)
+static void php_net_stream_put_string(char* buf, size_t buf_len, size_t* index, zval* option)
 {
   size_t size;
   char* ptr = buf + *index;
@@ -763,8 +766,8 @@ static void php_net_stream_get_string(zval* z_value, size_t* index, const char* 
     else
       add_assoc_null_ex(z_value, name, name_len);
     *index = data_len;
-     return;
-   }
+    return;
+  }
 #if defined(ZEND_ENGINE_3)
   if (NULL == name)
     add_next_index_stringl(z_value, (char*)data + *index, size);
@@ -779,33 +782,85 @@ static void php_net_stream_get_string(zval* z_value, size_t* index, const char* 
   *index += size;
 }
 
-static void php_net_stream_set_value(char* buf, size_t buf_len, size_t* index, zval* option, size_t format_type)
+static void php_net_stream_put_byte(char* buf, size_t buf_len, size_t* index, zval* option, size_t size)
+{
+#if defined(ZEND_ENGINE_3)
+  zend_string* str;
+  str = zval_get_string(option);
+  if (!size)
+    size = ZSTR_LEN(str);
+#elif defined(ZEND_ENGINE_2)
+  zval tmp = *option;
+  zval_copy_ctor(&tmp);
+  convert_to_string(&tmp);
+  if (!size)
+    size = Z_STRLEN(tmp);
+#endif
+  if (buf_len < *index + size)
+  {
+    *index = buf_len;
+#if defined(ZEND_ENGINE_3)
+    zend_string_release(str);
+#elif defined(ZEND_ENGINE_2)
+    zval_dtor(&tmp);
+#endif
+    return;
+  }
+#if defined(ZEND_ENGINE_3)
+  if (size) memcpy(buf + *index, ZSTR_VAL(str), size);
+  zend_string_release(str);
+#elif defined(ZEND_ENGINE_2)
+  if (size) memcpy(buf + *index, Z_STRVAL(tmp), size);
+  zval_dtor(&tmp);
+#endif
+  *index += size;
+}
+
+static void php_net_stream_get_byte(zval* z_value, size_t* index, const char* data, size_t data_len, size_t size)
+{
+  if (!size)
+    size = data_len - *index;
+  if (*index + size > data_len)
+  {
+    add_next_index_null(z_value);
+    *index = data_len;
+    return;
+  }
+#if defined(ZEND_ENGINE_3)
+  add_next_index_stringl(z_value, (char*)data + *index, size);
+#elif defined(ZEND_ENGINE_2)
+  add_next_index_stringl(z_value, (char*)data + *index, size, 1);
+#endif
+  *index += size;
+}
+
+static void php_net_stream_put_value(char* buf, size_t buf_len, size_t* index, zval* option, size_t format_type)
 {
   switch (format_type)
   {
   case NET_STREAM_FORMAT_INT_8:
   case NET_STREAM_FORMAT_UINT_8:
-    php_net_stream_set_int8(buf, buf_len, index, option);
+    php_net_stream_put_int8(buf, buf_len, index, option);
     break;
   case NET_STREAM_FORMAT_INT_16:
   case NET_STREAM_FORMAT_UINT_16:
-    php_net_stream_set_int16(buf, buf_len, index, option);
+    php_net_stream_put_int16(buf, buf_len, index, option);
     break;
   case NET_STREAM_FORMAT_INT_32:
   case NET_STREAM_FORMAT_UINT_32:
-    php_net_stream_set_int32(buf, buf_len, index, option);
+    php_net_stream_put_int32(buf, buf_len, index, option);
     break;
   case NET_STREAM_FORMAT_INT_64:
-    php_net_stream_set_int64(buf, buf_len, index, option);
+    php_net_stream_put_int64(buf, buf_len, index, option);
     break;
   case NET_STREAM_FORMAT_FLOAT:
-    php_net_stream_set_float(buf, buf_len, index, option);
+    php_net_stream_put_float(buf, buf_len, index, option);
     break;
   case NET_STREAM_FORMAT_DOUBLE:
-    php_net_stream_set_double(buf, buf_len, index, option);
+    php_net_stream_put_double(buf, buf_len, index, option);
     break;
   case NET_STREAM_FORMAT_STRING:
-    php_net_stream_set_string(buf, buf_len, index, option);
+    php_net_stream_put_string(buf, buf_len, index, option);
     break;
   default:
     zend_error(E_WARNING, NET_STREAM_LOG_2);
@@ -892,7 +947,7 @@ static void php_net_stream_invalid_key_name(const char* name, size_t name_len)
   efree(str);
 }
 
-static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter, int8_t is_key_array TSRMLS_DC)
+static int8_t php_net_stream_put_array(net_stream_packet_t* pkt, zval* parameter, int8_t is_key_array TSRMLS_DC)
 {
   zval* option;
 #ifdef ZEND_ENGINE_2
@@ -960,7 +1015,7 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
       option = *tmpzval;
       tmpzval = NULL;
 #endif
-      php_net_stream_set_value(pkt->data, pkt->data_len, &pkt->index, option, format_type);
+      php_net_stream_put_value(pkt->data, pkt->data_len, &pkt->index, option, format_type);
     }
     return 0;
   }
@@ -1076,7 +1131,7 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
 
       if (format_count && NET_STREAM_FORMAT_NONE != format_type)
       {
-        php_net_stream_set_value(pkt->data, pkt->data_len, &pkt->index, option, format_type);
+        php_net_stream_put_value(pkt->data, pkt->data_len, &pkt->index, option, format_type);
         if (!--format_count) format_type = NET_STREAM_FORMAT_NONE;
         ++j;
         continue;
@@ -1095,7 +1150,7 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
         }
         if (1 < format_count)
         {
-          php_net_stream_set_value(pkt->data, pkt->data_len, &pkt->index, option, format_type);
+          php_net_stream_put_value(pkt->data, pkt->data_len, &pkt->index, option, format_type);
           format_count -= 2;
           if (!format_count) format_type = NET_STREAM_FORMAT_NONE;
           ++j;
@@ -1111,13 +1166,13 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
       switch (ch)
       {
       case NET_STREAM_FORMAT_CHAR_ARRAY:
-        if (php_net_stream_set_array(pkt, option, 0 TSRMLS_CC))
+        if (php_net_stream_put_array(pkt, option, 0 TSRMLS_CC))
           return -1;
         format_count = 0;
         format_type = NET_STREAM_FORMAT_NONE;
         break;
       case NET_STREAM_FORMAT_CHAR_KEY_ARRAY:
-        if (php_net_stream_set_array(pkt, option, 1 TSRMLS_CC))
+        if (php_net_stream_put_array(pkt, option, 1 TSRMLS_CC))
           return -1;
         format_count = 0;
         format_type = NET_STREAM_FORMAT_NONE;
@@ -1126,7 +1181,7 @@ static int8_t php_net_stream_set_array(net_stream_packet_t* pkt, zval* parameter
         format_type = php_net_stream_get_format_type(ch);
         if (NET_STREAM_FORMAT_NONE != format_type)
         {
-          php_net_stream_set_value(pkt->data, pkt->data_len, &pkt->index, option, format_type);
+          php_net_stream_put_value(pkt->data, pkt->data_len, &pkt->index, option, format_type);
           break;
         }
         zend_error(E_WARNING, NET_STREAM_LOG_2);
@@ -1377,13 +1432,13 @@ static void php_net_stream_get_array(zval* z_root, net_stream_packet_t* pkt, con
 
 PHP_FUNCTION(net_stream_get)
 {
-  size_t format_type;
+  size_t format_type, byte_size = 0;
   net_stream_packet_t pkt;
   pkt.data_format = pkt.data_key = NULL;
   pkt.format_len = pkt.key_len = 0;
 
   if (3 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sll|ss!", &pkt.data, &pkt.data_len, &format_type, &pkt.index, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len) == FAILURE)
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sll|lss!", &pkt.data, &pkt.data_len, &format_type, &pkt.index, &byte_size, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len) == FAILURE)
     RETURN_NULL();
   if (!pkt.data_len || pkt.index >= pkt.data_len || NET_STREAM_FORMAT_NONE >= format_type || NET_STREAM_FORMAT_MAX_TAG <= format_type)
     RETURN_NULL();
@@ -1396,6 +1451,10 @@ PHP_FUNCTION(net_stream_get)
     pkt.format_index = 0;
     php_net_stream_get_array(return_value, &pkt, NULL, 0, (NULL == pkt.data_key ? 0 : 1), 0);
   }
+  else if (NET_STREAM_FORMAT_BYTE == format_type)
+  {
+    php_net_stream_get_byte(return_value, &pkt.index, pkt.data, pkt.data_len, byte_size);
+  }
   else
   {
     php_net_stream_get_value(return_value, format_type, &pkt.index, pkt.data, pkt.data_len, NULL, 0);
@@ -1403,16 +1462,16 @@ PHP_FUNCTION(net_stream_get)
   add_next_index_long(return_value, pkt.index);
 }
 
-PHP_FUNCTION(net_stream_set)
+PHP_FUNCTION(net_stream_put)
 {
   zval* option;
-  size_t format_type;
+  size_t format_type, byte_size = 0;
   net_stream_packet_t pkt;
   pkt.data_format = pkt.data_key = NULL;
   pkt.format_len = pkt.key_len = 0;
 
   if (3 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
-  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zsll|ss!", &option, &pkt.data, &pkt.data_len, &format_type, &pkt.index, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len) == FAILURE)
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "zsll|lss!", &option, &pkt.data, &pkt.data_len, &format_type, &pkt.index, &byte_size, &pkt.data_format, &pkt.format_len, &pkt.data_key, &pkt.key_len) == FAILURE)
     RETURN_FALSE;
   if (!pkt.data_len || pkt.index >= pkt.data_len || NET_STREAM_FORMAT_NONE >= format_type || NET_STREAM_FORMAT_MAX_TAG <= format_type)
     RETURN_FALSE;
@@ -1422,12 +1481,16 @@ PHP_FUNCTION(net_stream_set)
     pkt.key_tail = pkt.key_head = pkt.data_key;
     pkt.key_end = pkt.data_key + pkt.key_len;
     pkt.format_index = 0;
-    if (php_net_stream_set_array(&pkt, option, (NULL == pkt.data_key ? 0 : 1) TSRMLS_CC))
+    if (php_net_stream_put_array(&pkt, option, (NULL == pkt.data_key ? 0 : 1) TSRMLS_CC))
       RETURN_FALSE;
+  }
+  else if (NET_STREAM_FORMAT_BYTE == format_type)
+  {
+    php_net_stream_put_byte(pkt.data, pkt.data_len, &pkt.index, option, byte_size);
   }
   else
   {
-    php_net_stream_set_value(pkt.data, pkt.data_len, &pkt.index, option, format_type);
+    php_net_stream_put_value(pkt.data, pkt.data_len, &pkt.index, option, format_type);
   }
   RETURN_LONG(pkt.index);
 }
@@ -1575,7 +1638,7 @@ PHP_FUNCTION(net_stream_pack)
 
   if (NULL == pkt.data_key)
   {
-    if (php_net_stream_set_array(&pkt, parameter, 0 TSRMLS_CC))
+    if (php_net_stream_put_array(&pkt, parameter, 0 TSRMLS_CC))
     {
       efree(pkt.data);
       RETURN_NULL();
@@ -1624,7 +1687,7 @@ PHP_FUNCTION(net_stream_pack)
 
     if (format_count && NET_STREAM_FORMAT_NONE != format_type)
     {
-      php_net_stream_set_value(pkt.data, pkt.data_len, &pkt.index, option, format_type);
+      php_net_stream_put_value(pkt.data, pkt.data_len, &pkt.index, option, format_type);
       if (!--format_count) format_type = NET_STREAM_FORMAT_NONE;
       continue;
     }
@@ -1642,7 +1705,7 @@ PHP_FUNCTION(net_stream_pack)
       }
       if (1 < format_count)
       {
-        php_net_stream_set_value(pkt.data, pkt.data_len, &pkt.index, option, format_type);
+        php_net_stream_put_value(pkt.data, pkt.data_len, &pkt.index, option, format_type);
         format_count -= 2;
         if (!format_count) format_type = NET_STREAM_FORMAT_NONE;
       }
@@ -1657,7 +1720,7 @@ PHP_FUNCTION(net_stream_pack)
     switch (ch)
     {
     case NET_STREAM_FORMAT_CHAR_ARRAY:
-      if (php_net_stream_set_array(&pkt, option, 0 TSRMLS_CC))
+      if (php_net_stream_put_array(&pkt, option, 0 TSRMLS_CC))
       {
         efree(pkt.data);
         RETURN_NULL();
@@ -1666,7 +1729,7 @@ PHP_FUNCTION(net_stream_pack)
       format_type = NET_STREAM_FORMAT_NONE;
       break;
     case NET_STREAM_FORMAT_CHAR_KEY_ARRAY:
-      if (php_net_stream_set_array(&pkt, option, 1 TSRMLS_CC))
+      if (php_net_stream_put_array(&pkt, option, 1 TSRMLS_CC))
       {
         efree(pkt.data);
         RETURN_NULL();
@@ -1678,7 +1741,7 @@ PHP_FUNCTION(net_stream_pack)
       format_type = php_net_stream_get_format_type(ch);
       if (NET_STREAM_FORMAT_NONE != format_type)
       {
-        php_net_stream_set_value(pkt.data, pkt.data_len, &pkt.index, option, format_type);
+        php_net_stream_put_value(pkt.data, pkt.data_len, &pkt.index, option, format_type);
         break;
       }
       zend_error(E_WARNING, NET_STREAM_LOG_2);
@@ -1693,6 +1756,47 @@ PHP_FUNCTION(net_stream_pack)
   RETVAL_STRINGL(pkt.data, pkt.index, 1);
 #endif
   efree(pkt.data);
+}
+
+PHP_FUNCTION(net_stream_alloc)
+{
+  char* data;
+  size_t data_len;
+  if (1 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &data_len) == FAILURE)
+    RETURN_NULL();
+  if (!data_len) RETURN_NULL();
+
+  data = (char*)emalloc(data_len);
+  memset(data, 0, data_len);
+#if defined(ZEND_ENGINE_3)
+  RETVAL_STRINGL(data, data_len);
+#elif defined(ZEND_ENGINE_2)
+  RETVAL_STRINGL(data, data_len, 1);
+#endif
+  efree(data);
+}
+
+PHP_FUNCTION(net_stream_trim)
+{
+  char *data, *buf;
+  size_t data_len, buf_len, start = 0;
+  if (2 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
+  if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sl|l", &buf, &buf_len, &data_len, &start) == FAILURE)
+    RETURN_NULL();
+  if (!buf_len) RETURN_NULL();
+
+  if (start + data_len > buf_len)
+    data_len = buf_len - start;
+
+  data = (char*)emalloc(data_len);
+  memcpy(data, buf + start, data_len);
+#if defined(ZEND_ENGINE_3)
+  RETVAL_STRINGL(data, data_len);
+#elif defined(ZEND_ENGINE_2)
+  RETVAL_STRINGL(data, data_len, 1);
+#endif
+  efree(data);
 }
 
 PHP_FUNCTION(net_stream_encode)

@@ -42,11 +42,13 @@ PHP_MSHUTDOWN_FUNCTION(net_stream);
 PHP_MINFO_FUNCTION(net_stream);
 
 PHP_FUNCTION(net_stream_get);
-PHP_FUNCTION(net_stream_set);
+PHP_FUNCTION(net_stream_put);
 PHP_FUNCTION(net_stream_pack);
 PHP_FUNCTION(net_stream_unpack);
 PHP_FUNCTION(net_stream_encode);
 PHP_FUNCTION(net_stream_decode);
+PHP_FUNCTION(net_stream_alloc);
+PHP_FUNCTION(net_stream_trim);
 
 #define NET_STREAM_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(net_stream, v)
 
