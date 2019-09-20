@@ -1784,7 +1784,8 @@ PHP_FUNCTION(net_stream_trim)
   if (2 > ZEND_NUM_ARGS()) WRONG_PARAM_COUNT;
   if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "sl|l", &buf, &buf_len, &data_len, &start) == FAILURE)
     RETURN_NULL();
-  if (!buf_len) RETURN_NULL();
+  if (!buf_len || !data_len)
+    RETURN_NULL();
 
   if (start + data_len > buf_len)
     data_len = buf_len - start;
